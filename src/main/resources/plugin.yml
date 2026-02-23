@@ -1,0 +1,4 @@
+name: Snorch
+version: '1.0.0'
+main: dk.bjom.snorch.Snorch
+api-version: '1.21'

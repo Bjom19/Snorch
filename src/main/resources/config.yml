@@ -1,0 +1,8 @@
+# Radius in blocks to search for a Snorch around newly placed snow
+snorch-radius: 10
+
+# Ticks between each concentric ring of snow starting to melt (~0.5s per ring at default)
+melt-ring-delay-ticks: 10
+
+# Ticks between each layer reduction on a single snow block (~0.2s per layer at default)
+melt-layer-ticks: 4

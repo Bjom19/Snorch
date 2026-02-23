@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:/Users/noahc/IdeaProjects/Snorch/src/main/java/dk/bjom/snorch/SnorchRecipes.java\":*)",
+      "Bash(\"C:/Users/noahc/IdeaProjects/Snorch/src/main/java/dk/bjom/snorch/Snorch.java\":*)",
+      "Bash(./gradlew build:*)",
+      "Bash(gradle --version:*)",
+      "Bash(cmd.exe /c \"gradlew.bat build\")",
+      "Bash(cmd.exe /c \"cd C:\\\\Users\\\\noahc\\\\IdeaProjects\\\\Snorch && gradlew.bat build 2>&1\")",
+      "Bash(where:*)",
+      "Bash(cmd.exe /c \"where java 2>&1\")",
+      "Bash(GRADLE_BIN=\"C:/Users/noahc/.gradle/wrapper/dists/gradle-8.8-bin/dl7vupf4psengwqhwktix4v1/gradle-8.8/bin/gradle\")",
+      "Bash(JAVA_HOME=\"C:/Program Files/Eclipse Adoptium/jdk-21.0.6.7-hotspot\")",
+      "Bash(JAVA_BIN=\"$JAVA_HOME/bin/java\":*)",
+      "Bash(__NEW_LINE_7c2e029cdb6501bf__ \"$JAVA_BIN\" -jar \"C:/Users/noahc/.gradle/wrapper/dists/gradle-8.8-bin/dl7vupf4psengwqhwktix4v1/gradle-8.8/lib/gradle-launcher-8.8.jar\" --project-dir \"C:/Users/noahc/IdeaProjects/Snorch\" build)",
+      "Bash(gradle build:*)",
+      "Bash(\"/c/Users/noahc/.gradle/wrapper/dists/gradle-8.8-bin/dl7vupf4psengwqhwktix4v1/gradle-8.8/bin/gradle\" build -p \"C:/Users/noahc/IdeaProjects/Snorch\")",
+      "Bash(ls:*)",
+      "Bash(java:*)",
+      "Bash(/c/Users/noahc/.gradle/wrapper/dists/gradle-8.8-bin/dl7vupf4psengwqhwktix4v1/gradle-8.8/bin/gradle build)"
+    ]
+  }
+}
