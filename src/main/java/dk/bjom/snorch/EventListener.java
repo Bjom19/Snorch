@@ -15,8 +15,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class EventListener implements Listener {
+    private static final Set<Material> ICE_TYPES = Set.of(
+            Material.ICE, Material.FROSTED_ICE, Material.PACKED_ICE, Material.BLUE_ICE);
+
     private final Snorch plugin;
     private final SnorchTracker tracker;
     private final Map<Location, List<BukkitTask>> activeMelts = new HashMap<>();
@@ -28,8 +32,9 @@ public class EventListener implements Listener {
     }
 
     @EventHandler
-    public void onSnowForm(BlockFormEvent event) {
-        if (event.getNewState().getType() != Material.SNOW) return;
+    public void onBlockForm(BlockFormEvent event) {
+        Material type = event.getNewState().getType();
+        if (type != Material.SNOW && !ICE_TYPES.contains(type)) return;
 
         int radius = plugin.getConfig().getInt("snorch-radius", 10);
         if (tracker.isNearby(event.getBlock().getLocation(), radius)) {
@@ -73,39 +78,80 @@ public class EventListener implements Listener {
         tasks.add(task);
     }
 
+    private Material nextIceStage(Material current) {
+        return switch (current) {
+            case BLUE_ICE -> Material.PACKED_ICE;
+            case PACKED_ICE -> Material.ICE;
+            case ICE, FROSTED_ICE -> Material.AIR;
+            default -> null;
+        };
+    }
+
+    private void meltIce(Block iceBlock, int stageTicks, List<BukkitTask> tasks, Location torchLocation) {
+        BukkitTask task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (!activeMelts.containsKey(torchLocation)) return;
+            Material current = iceBlock.getType();
+            Material next = nextIceStage(current);
+            if (next == null) return;
+            iceBlock.setType(next);
+            if (ICE_TYPES.contains(next)) {
+                meltIce(iceBlock, stageTicks, tasks, torchLocation);
+            }
+        }, stageTicks);
+        tasks.add(task);
+    }
+
     private void startMelt(Block torch) {
         int radius = plugin.getConfig().getInt("snorch-radius", 10);
         int ringDelay = plugin.getConfig().getInt("melt-ring-delay-ticks", 10);
         int layerTicks = plugin.getConfig().getInt("melt-layer-ticks", 4);
+        int iceStageTicks = plugin.getConfig().getInt("ice-stage-ticks", 20);
 
         World world = torch.getWorld();
         int cx = torch.getX(), cy = torch.getY(), cz = torch.getZ();
 
-        Map<Integer, List<Block>> rings = new HashMap<>();
+        Map<Integer, List<Block>> snowRings = new HashMap<>();
+        Map<Integer, List<Block>> iceRings = new HashMap<>();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 int blockX = cx + dx, blockZ = cz + dz;
                 if (!world.isChunkLoaded(blockX >> 4, blockZ >> 4)) continue;
                 for (int dy = -radius; dy <= radius; dy++) {
                     Block b = world.getBlockAt(blockX, cy + dy, blockZ);
-                    if (b.getType() != Material.SNOW) continue;
                     int dist = Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
-                    rings.computeIfAbsent(dist, k -> new ArrayList<>()).add(b);
+                    if (b.getType() == Material.SNOW) {
+                        snowRings.computeIfAbsent(dist, k -> new ArrayList<>()).add(b);
+                    } else if (ICE_TYPES.contains(b.getType())) {
+                        iceRings.computeIfAbsent(dist, k -> new ArrayList<>()).add(b);
+                    }
                 }
             }
         }
 
-        if (rings.isEmpty()) return;
+        if (snowRings.isEmpty() && iceRings.isEmpty()) return;
 
         Location torchLocation = torch.getLocation();
         List<BukkitTask> tasks = new ArrayList<>();
-        for (Map.Entry<Integer, List<Block>> entry : rings.entrySet()) {
+
+        for (Map.Entry<Integer, List<Block>> entry : snowRings.entrySet()) {
             long startDelay = (long) entry.getKey() * ringDelay;
             List<Block> ringBlocks = entry.getValue();
             BukkitTask ringTask = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                 for (Block snowBlock : ringBlocks) {
                     if (!snowBlock.getChunk().isLoaded()) continue;
                     meltLayer(snowBlock, layerTicks, tasks, torchLocation);
+                }
+            }, startDelay);
+            tasks.add(ringTask);
+        }
+
+        for (Map.Entry<Integer, List<Block>> entry : iceRings.entrySet()) {
+            long startDelay = (long) entry.getKey() * ringDelay;
+            List<Block> ringBlocks = entry.getValue();
+            BukkitTask ringTask = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                for (Block iceBlock : ringBlocks) {
+                    if (!iceBlock.getChunk().isLoaded()) continue;
+                    meltIce(iceBlock, iceStageTicks, tasks, torchLocation);
                 }
             }, startDelay);
             tasks.add(ringTask);

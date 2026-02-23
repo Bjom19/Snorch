@@ -6,3 +6,6 @@ melt-ring-delay-ticks: 10
 
 # Ticks between each layer reduction on a single snow block (~0.2s per layer at default)
 melt-layer-ticks: 4
+
+# Ticks between each stage of ice melting (blue ice -> packed ice -> ice -> air, ~1s per stage at default)
+ice-stage-ticks: 20
